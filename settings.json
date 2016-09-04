@@ -1,0 +1,21 @@
+{
+	"hostname" : "127.0.0.1",
+	"port" : 80,
+	"validExts" : {
+		".html": "text/html",			 
+		".js": "application/javascript",  
+		".css": "text/css", 
+		".txt": "text/plain", 
+		".jpg": "image/jpeg", 
+		".gif": "image/gif", 
+		".png": "image/png",
+		".ico": "image/ico",
+		".zip": "application/zip"
+	},
+	"invalidFiles" : [
+		"server.js",
+		"settings.json",
+		"run.bat",
+		"run.sh"
+	]
+}
