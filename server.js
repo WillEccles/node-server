@@ -28,6 +28,8 @@ var invalids = [
 // default IP and port
 var hostname = process.argv[2] || "127.0.0.1";
 var port = process.argv[3] || 80;
+// default to index.html if index is not specified
+var index = "index.html";
 
 try {
 	fs.accessSync("settings.json", fs.F_OK);
@@ -55,6 +57,14 @@ try {
 		hostname = settings.hostname;
 		console.log("Loaded hostname...");
 	}
+
+	// index
+	if (settings.index) {
+		index = settings.index;
+		if (/^[^\/]/.test(index))
+			index = "/" + index;
+		console.log("Loaded index...");
+	}
 } catch (err) {
 	console.error("Settings file not found.");
 	// file is RIP
@@ -70,7 +80,7 @@ http.createServer((request, response) => {
 	/* LOOK INTO https://gist.github.com/hectorcorrea/2573391 */
 
 	var filename;
-	if (request.url == "" || request.url == "/") filename = "/index.html";
+	if (request.url == "" || request.url == "/") filename = index;
 	else filename = decodeURI(request.url);
 
 	var ext = path.extname(filename);
