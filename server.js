@@ -59,8 +59,8 @@ try {
 	}
 
 	// index
-	if (settings.index) {
-		index = settings.index;
+	if (settings.indexFile) {
+		index = settings.indexFile;
 		if (/^[^\/]/.test(index))
 			index = "/" + index;
 		console.log("Loaded index...");

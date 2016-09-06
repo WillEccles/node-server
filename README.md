@@ -29,7 +29,7 @@ In order to set your preferred settings, you just have to go edit/create `settin
 
 `"port":Int`: The port of the server.
 
-`"index":"string"`: The index for the server. If not specified, defaults to “/index.html.”
+`"indexFile":"string"`: The index for the server. If not specified, defaults to “/index.html.”
 
 `"validExts":{"string":"string"}`: Valid extensions and their mime types. Any extensions requested that are not in this list will be responded to with a 403 (access denied) error. You should probably not mess with this unless you need to.
 
