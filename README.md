@@ -31,6 +31,8 @@ In order to set your preferred settings, you just have to go edit/create `settin
 
 `"indexFile":"string"`: The index for the server. If not specified, defaults to “/index.html.”
 
+`"siteDirectory":"string"`: The root directory of the site, from which every file will be found.
+
 `"validExts":{"string":"string"}`: Valid extensions and their mime types. Any extensions requested that are not in this list will be responded to with a 403 (access denied) error. You should probably not mess with this unless you need to.
 
 `"invalidFiles":["string"]`: Files that will always return a 403, even if their extensions are valid. Regardless of what you put in this list, `server.js` will *never* be accessible, for security reasons.

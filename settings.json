@@ -2,6 +2,7 @@
 	"hostname" : "127.0.0.1",
 	"port" : 8080,
 	"indexFile" : "index.html",
+	"siteDirectory" : "",
 	"validExts" : {
 		".html": "text/html",			 
 		".js": "application/javascript",  
@@ -17,6 +18,7 @@
 		"server.js",
 		"settings.json",
 		"run.bat",
-		"run.sh"
+		"run.sh",
+		"foo.bar"
 	]
 }

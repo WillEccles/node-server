@@ -30,6 +30,8 @@ var hostname = process.argv[2] || "127.0.0.1";
 var port = process.argv[3] || 80;
 // default to index.html if index is not specified
 var index = "index.html";
+// default directory, AKA should files be from / or from /files/
+var siteDir = "";
 
 try {
 	fs.accessSync("settings.json", fs.F_OK);
@@ -38,13 +40,13 @@ try {
 	
 	// load valid extensions
 	if (settings.validExts) {
-		validExtensions = settings.validExts;
+		for (var key in settings.validExts) validExtensions[key]=settings.validExts[key];
 		console.log("Loaded validExts...");
 	}
 
 	// load invalid files
 	if (settings.invalidFiles) {
-		invalids = settings.invalidFiles;
+		for (var key in settings.invalidFiles) invalids[key]=settings.invalidFiles[key];
 		console.log("Loaded invalidFiles...");
 	}
 
@@ -65,13 +67,16 @@ try {
 			index = "/" + index;
 		console.log("Loaded index...");
 	}
+
+	// dir
+	if (settings.siteDirectory && !/^\/$|^$/.test(settings.siteDirectory)) {
+		siteDir = settings.siteDirectory;
+		if (!/^\/.+/.test(siteDir))
+			siteDir = "/" + siteDir;
+		console.log("Loaded site directory...");
+	}
 } catch (err) {
-	console.error("Settings file not found.");
-	// file is RIP
-	fs.writeFile('settings.json', "{}", (err) => {
-		if (err) throw err;
-		console.info("Created settings.json");
-	});
+	console.error("Problem reading settings file.");
 }
 
 // create the server
@@ -86,6 +91,8 @@ http.createServer((request, response) => {
 	var ext = path.extname(filename);
 	var localPath = __dirname;
 
+	filename = siteDir + filename;
+
 	var isValidExt = validExtensions[ext];
 	// determine if the file is valid
 	var isInvalid = (invalids.indexOf(filename) > -1) || (invalids.indexOf(filename.replace(/^\//, "")) > -1) || (/server\.js/.test(filename));
@@ -95,7 +102,7 @@ http.createServer((request, response) => {
 		fs.exists(localPath, (exists) => {
 			if (exists) {
 				console.log(`Serving file: ${filename}`);
-				getFile(localPath, response, ext);
+				getFile(localPath, response, validExtensions[ext]);
 			} else {
 				console.error(`404 - File not found: ${filename}`);
 				// give them the 404 page
@@ -118,7 +125,7 @@ http.createServer((request, response) => {
 			}
 		});
 	} else if (isInvalid || !isValidExt) {
-		console.info(`Client requested ${filename} - Serving 403.`);
+		console.info(`${filename} - Error: 403.`);
 		var error403 = "<!DOCTYPE html><html><head><title>403 - Access Denied</title></head><body><h1>Error 403</h1><hr/><h2>Access denied.</h2></body></html>";
 		// respond with this default 403 error page UNLESS 403.html is found
 		fs.readFile("403.html", (err, contents)=>{
