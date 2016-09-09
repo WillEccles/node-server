@@ -33,10 +33,26 @@ var index = "index.html";
 // default directory, AKA should files be from / or from /files/
 var siteDir = "";
 
+// error page locations
+var errorPages = {
+	"403.html": "/403.html",
+	"404.html": "/404.html"
+}
+
 try {
 	fs.accessSync("settings.json", fs.F_OK);
 	// file is accessible
 	var settings = JSON.parse(fs.readFileSync('settings.json'));
+
+	// load dir first
+	if (settings.siteDirectory && !/^\/$|^$/.test(settings.siteDirectory)) {
+		siteDir = settings.siteDirectory;
+		if (!/^\/.+/.test(siteDir))
+	    	siteDir = "/" + siteDir;
+		if (!/\/$/.test(siteDir))
+			siteDir = siteDir.replace(/\/$/, "");
+		console.log("Loaded site directory...");
+	}
 	
 	// load valid extensions
 	if (settings.validExts) {
@@ -56,7 +72,7 @@ try {
 		console.log("Loaded port...");
 	}
 	if (settings.hostname && !(process.argv[2])) {
-		hostname = settings.hostname;
+		hostname = settings.hostname.replace(/\$siteDir/, siteDir.replace('/', ''));
 		console.log("Loaded hostname...");
 	}
 
@@ -68,12 +84,10 @@ try {
 		console.log("Loaded index...");
 	}
 
-	// dir
-	if (settings.siteDirectory && !/^\/$|^$/.test(settings.siteDirectory)) {
-		siteDir = settings.siteDirectory;
-		if (!/^\/.+/.test(siteDir))
-			siteDir = "/" + siteDir;
-		console.log("Loaded site directory...");
+	// error pages
+	if (settings.errorPages) {
+		for (var key in settings.errorPages) errorPages[key]=settings.errorPages[key].replace(/\$siteDir/, siteDir);
+		console.log("Loaded error files...");
 	}
 } catch (err) {
 	console.error("Problem reading settings file.");
@@ -104,11 +118,11 @@ http.createServer((request, response) => {
 				console.log(`Serving file: ${filename}`);
 				getFile(localPath, response, validExtensions[ext]);
 			} else {
-				console.error(`404 - File not found: ${filename}`);
+				console.error(`${filename} - Error 404`);
 				// give them the 404 page
-				var error404 = `<!DOCTYPE html><html><head><title>404 - File not Found</title></head><body><h1>Error 404</h1><hr/><h2>File not found: ${filename}</h2></body></html>`;
+				var error404 = `<!DOCTYPE html><html><head><title>404 - File not Found</title></head><body><h1>Error 404</h1><hr/><h2>File not found: ${filename.replace(siteDir, "")}</h2></body></html>`;
 				// respond with this default 404 error page UNLESS 404.html is found
-				if (!(/favicon\.ico/.test(filename))) fs.readFile("404.html", (err, contents)=>{
+				if (!(/favicon\.ico/.test(filename))) fs.readFile(errorPages["404.html"], (err, contents)=>{
 					if(!err) {
 						response.setHeader("Content-Type", ".html");
 						response.setHeader("Content-Length", contents.length);
@@ -125,17 +139,17 @@ http.createServer((request, response) => {
 			}
 		});
 	} else if (isInvalid || !isValidExt) {
-		console.info(`${filename} - Error: 403.`);
+		console.info(`${filename} - Error 403`);
 		var error403 = "<!DOCTYPE html><html><head><title>403 - Access Denied</title></head><body><h1>Error 403</h1><hr/><h2>Access denied.</h2></body></html>";
 		// respond with this default 403 error page UNLESS 403.html is found
-		fs.readFile("403.html", (err, contents)=>{
+		fs.readFile(errorPages["403.html"], (err, contents)=>{
 			if(!err) {
 				response.setHeader("Content-Type", ".html");
 				response.setHeader("Content-Length", contents.length);
 				response.statusCode = 403;
 				response.end(contents);
 			} else {
-				console.log("403.html not found, sending default 403.");
+				console.log(errorPages["403.html"] + " not found, sending default 403.");
 				response.setHeader("Content-Type", ".html");
 				response.setHeader("Content-Length", error403.length);
 				response.statusCode = 403;

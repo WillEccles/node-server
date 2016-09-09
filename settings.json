@@ -2,7 +2,7 @@
 	"hostname" : "127.0.0.1",
 	"port" : 8080,
 	"indexFile" : "index.html",
-	"siteDirectory" : "",
+	"siteDirectory" : "willeccles.github.io",
 	"validExts" : {
 		".html": "text/html",			 
 		".js": "application/javascript",  
@@ -20,5 +20,9 @@
 		"run.bat",
 		"run.sh",
 		"foo.bar"
-	]
+	],
+	"errorPages" : {
+		"403.html" : "$siteDir/403.html",
+		"404.html" : "$siteDir/404.html"
+	}
 }

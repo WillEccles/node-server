@@ -25,7 +25,7 @@ $ node server.js [hostname] [port]
 In order to set your preferred settings, you just have to go edit/create `settings.json` with your preferred text editor. The defaults for this file can be seen [here](/settings.json). All of the options can be found below—none of them are required.
 
 #### Options:
-`"hostname":"string"`: The hostname of the server.
+`"hostname":"string"`: The hostname of the server. This setting is one of the only two that support the `$siteDir` wildcard at the moment. This means that if you have a folder for a site that's `/my.site.com`, you can set the hostname to `"$siteDir"` and the server will listen at `my.site.com:[port]`. This is particularly useful if you have 4 sites and you may launch the server using different ones at any time.
 
 `"port":Int`: The port of the server.
 
@@ -37,5 +37,7 @@ In order to set your preferred settings, you just have to go edit/create `settin
 
 `"invalidFiles":["string"]`: Files that will always return a 403, even if their extensions are valid. Regardless of what you put in this list, `server.js` will *never* be accessible, for security reasons.
 
+`"errorPages":{"string","string"}`: Locations for error pages. By default, the server will look at `/40*.html`, but this behavior can be changed. This setting supports the wildcard `$siteDir`, which is replaced by the `siteDirectory` string. For example, if `siteDirectory` is `"mysitedir"` and `"403.html"` is set to `"$siteDir/403.html"`, it will look at `"mysitedir/403.html"`. Keep in mind that `$siteDir` ends without a `/`, so you have to add the `/` before `403.html` (like in the previous example).
+
 ## Custom Error Files
-In the event of a 403 or 404 error, the user will be served a simple error page. In the event that you want to make custom ones, you can simply create `403.html` and `404.html`.
+In the event of a 403 or 404 error, the user will be served a simple error page. In the event that you want to make custom ones, you can simply create `/403.html` and `/404.html`. For more info, see `"errorPages"` in the [settings documentation.](https://github.com/WillEccles/node-server#settings)
