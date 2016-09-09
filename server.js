@@ -125,9 +125,9 @@ http.createServer((request, response) => {
 				if (!(/favicon\.ico/.test(filename))) fs.readFile(errorPages["404.html"], (err, contents)=>{
 					if(!err) {
 						response.setHeader("Content-Type", ".html");
-						response.setHeader("Content-Length", contents.length);
+						response.setHeader("Content-Length", contents.replace(/\$fileName/, filename.replace(siteDir, "")).length);
 						response.statusCode = 404;
-						response.end(contents);
+						response.end(contents.replace(/\$fileName/, filename.replace(siteDir, ""));
 					} else {
 						console.log("404.html not found, sending default 404.");
 						response.setHeader("Content-Type", ".html");
@@ -145,9 +145,9 @@ http.createServer((request, response) => {
 		fs.readFile(errorPages["403.html"], (err, contents)=>{
 			if(!err) {
 				response.setHeader("Content-Type", ".html");
-				response.setHeader("Content-Length", contents.length);
+				response.setHeader("Content-Length", contents.replace(/\$fileName/, filename.replace(siteDir, "")).length);
 				response.statusCode = 403;
-				response.end(contents);
+				response.end(contents.replace(/\$fileName/, filename.replace(siteDir, ""));
 			} else {
 				console.log(errorPages["403.html"] + " not found, sending default 403.");
 				response.setHeader("Content-Type", ".html");
