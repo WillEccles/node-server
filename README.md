@@ -2,18 +2,35 @@
 An easy-to-use file server written in Node.js
 
 ## Setup
-Setup is simple. All you have to do is the following:
+Setup is simple. There are 2 ways of going about it:
+
+**Option 1:**
+
+You can download the latest release from [here](https://github.com/WillEccles/node-server/releases/latest) and extract to your desired location. Once you have done this, you are ready to go to the Usage section!
+
+**Option 2:**
+
+This method is more hands-on than the previous one, but also may contain new features that are working, but aren't large enough for a full release yet. Think of it as a stable beta.
 
 ```
-$ cd /dir/of/server/
+$ cd /dir/of/server
 $ git clone https://github.com/willeccles/node-server
 ```
+
+If you *really* want to get the newest, possibly broken, bleeding-edge, rad features that I am in the process of working on, you can do the following after using method 2 above:
+
+```
+$ cd /dir/of/server
+$ git checkout dev
+```
+
+*Disclaimer: I am not responsible for any damage you cause to your server by using the dev branch. You do so at your own risk.*
 
 ## Usage
 Usage is also simple:
 
 ```
-$ cd /dir/of/server/
+$ cd /dir/of/server
 $ node server.js [hostname] [port]
 ```
 
