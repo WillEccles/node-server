@@ -44,5 +44,5 @@ In the event of a 403 or 404 error, the user will be served a simple error page.
 
 Inside of your error files, you have access to the `$fileName` variable. If the server finds `$fileName` *anywhere* in the html file, it will be replaced with "/filename.ext". For example, if the user tried to get `myfile.html` and that doesn't exist, the server will replace `$fileName` with `/myfile.html`. If the directory setting is not `"/"` or `""`, it **will not** show the directory, only `/myfile.html`, since the directory is the root directory and is considered  `/`.
 
-# Contribution
+## Contribution
 If you would like to contribute something, please only create pull requests for the master branch, as the dev branch is for me to create and add new features before they are ready for release.
