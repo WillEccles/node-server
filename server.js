@@ -1,5 +1,6 @@
 // imports
 var http = require("http"),
+	https = require("https"),
 	url = require("url"),
 	path = require("path"),
 	fs = require("fs");
@@ -22,7 +23,8 @@ var invalids = [
 	"/server.js",
 	"/settings.json",
 	"/run.bat",
-	"/run.sh"
+	"/run.sh",
+	"/users.json"
 ];
 
 // default IP and port
@@ -38,6 +40,12 @@ var errorPages = {
 	"403.html": "/403.html",
 	"404.html": "/404.html"
 }
+
+// https or http?
+var useHTTPS = false;
+
+// use authentication?
+var useAuth = false;
 
 try {
 	fs.accessSync("settings.json", fs.F_OK);
@@ -76,6 +84,17 @@ try {
 		console.log("Loaded hostname...");
 	}
 
+	// https
+	if (settings.useHTTPS) {
+		useHTTPS = settings.useHTTPS;
+		console.log("Using HTTPS...");
+		// if HTTPS is enabled, use auth?
+		if (settings.requiresAuth) {
+			useAuth = settings.requiresAuth;
+			console.log("Requiring authenticaiton...");
+		}
+	}
+
 	// index
 	if (settings.indexFile) {
 		index = settings.indexFile;
@@ -94,7 +113,13 @@ try {
 }
 
 // create the server
-http.createServer((request, response) => {
+var server;
+if (useHTTPS)
+	var server = https.createServer(handleServerRequest);
+else
+	var server = http.createServer(handleServerRequest);
+
+function handleServerRequest(request, response) {
 
 	/* LOOK INTO https://gist.github.com/hectorcorrea/2573391 */
 
@@ -157,7 +182,9 @@ http.createServer((request, response) => {
 			}
 		});
 	}
-}).listen(port, hostname);
+}
+
+server.listen(port, hostname);
 
 function getFile(localPath, res, mimeType) {
 	fs.readFile(localPath, function(err, contents) {

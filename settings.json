@@ -2,6 +2,8 @@
 	"hostname" : "127.0.0.1",
 	"port" : 8080,
 	"indexFile" : "index.html",
+	"useHTTPS" : true,
+	"requiresAuth": true,
 	"siteDirectory" : "",
 	"validExts" : {
 		".html": "text/html",			 
