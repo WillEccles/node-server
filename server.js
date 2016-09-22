@@ -180,7 +180,7 @@ function handleServerRequest(request, response) {
 
 	// if https mode, find out if header contains auth
 	if (useAuth && useHTTPS && request.headers.authorization) {
-		console.log(`Checking credentials:\n    ${request.headers.host}`);
+		console.log(`Checking credentials:\n    Host: ${request.headers.host}`);
 		// check to make sure user's credentials are correct
 		var authHeader = request.headers.authorization;
 		if (/^Basic [A-Za-z0-9=+\/]+/.test(authHeader)) {
@@ -188,15 +188,23 @@ function handleServerRequest(request, response) {
 			var buf = Buffer.from(authHeader.replace(/^Basic /, ""), 'base64');
 			var username = buf.toString().replace(/:.+$/, "");
 			var pass = buf.toString().replace(/^.+?:/, "");
-			// TODO: handle username and password
+			
+			if (users[username] == pass) {
+				console.log(`Granting ${username} access (${request.headers.host}).`);
+				hasAccess = true;
+			}
+			else {
+				console.error(`Denying ${request.headers.host} access:\n    401 - Unauthorized.`);
+				hasAccess = false;
+			}
 		}
 		else {
-			console.error("Incorrect credentials.");
+			console.error("Incorrect credentials format.");
 			hasAccess = false;
 		}
 	}
 	else if (useAuth && useHTTPS && !request.headers.authorization) {
-		console.log(`Denying request due to lack of auth:\n    ${request.headers.host}`);
+		console.log(`Denying request due to lack of credentials:\n    Host: ${request.headers.host}`);
 		hasAccess = false;
 	}
 
@@ -246,9 +254,12 @@ function handleServerRequest(request, response) {
 			}
 		});
 	} else if (!hasAccess) { // issue 401 if user doesn't have proper credentials
-		console.info(`${filename} - Error 401`);
+		var error401page = "<!DOCTYPE html><html><head><title>401 - Unauthorized</title></head><body><h1>Error 401</h1><hr/><h2>Unauthorized.</h2></body></html>";
+		console.info(`${request.headers.host}:\n    Access denied: ${filename}`);
 		response.setHeader("WWW-Authenticate", `Newauth realm="site", type=1, title="Login to ${hostname}", Basic realm="simple"`);
 		response.statusCode = 401;
+		response.setHeader("Content-Type", ".html");
+		response.setHeader("Content-Length", error401page.length);
 		response.end();
 	}
 }
