@@ -4,6 +4,10 @@
 	"indexFile" : "index.html",
 	"useHTTPS" : true,
 	"requiresAuth": true,
+	"sslOptions" : {
+		"cert" : "cert/key-cert.pem",
+		"key" : "cert/key.pem"
+	},
 	"siteDirectory" : "",
 	"validExts" : {
 		".html": "text/html",			 

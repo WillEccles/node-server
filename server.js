@@ -47,6 +47,14 @@ var useHTTPS = false;
 // use authentication?
 var useAuth = false;
 
+// options for https if needed
+var SSLOptions = {
+};
+
+// users if using HTTPS
+var users = {
+};
+
 try {
 	fs.accessSync("settings.json", fs.F_OK);
 	// file is accessible
@@ -92,7 +100,38 @@ try {
 		if (settings.requiresAuth) {
 			useAuth = settings.requiresAuth;
 			console.log("Requiring authenticaiton...");
+			try {
+				fs.accessSync("users.json", fs.F_OK);
+				console.log("Loading users...");
+				var usersFile = JSON.parse(fs.readFileSync("users.json"));
+				for (var key in usersFile) users[key]=usersFile[key];
+			} catch(err) {
+				console.error("Error loading users. Disabling auth.");
+				useAuth = false;
+			}
 		}
+	}
+
+	// https cert/key
+	if (useHTTPS && settings.sslOptions["key"] && settings.sslOptions["cert"]) {
+		try {
+			fs.accessSync(settings.sslOptions["key"], fs.F_OK);
+			console.log("Reading key file...");
+			SSLOptions.key = fs.readFileSync(settings.sslOptions["key"]);
+		} catch (err) {
+			console.error("Problem reading key file.");
+			useHTTPS = false;
+		}
+		try {
+			fs.accessSync(settings.sslOptions["cert"], fs.F_OK);
+			console.log("Reading cert file...");
+			SSLOptions.cert = fs.readFileSync(settings.sslOptions["cert"]);
+		} catch(err) {
+			console.error("Problem reading cert file.");
+			useHTTPS = false;
+		}
+		if (!useHTTPS)
+			console.log("Disabling HTTPS...");
 	}
 
 	// index
@@ -114,8 +153,9 @@ try {
 
 // create the server
 var server;
-if (useHTTPS)
-	var server = https.createServer(handleServerRequest);
+if (useHTTPS) {
+	var server = https.createServer(SSLOptions, handleServerRequest);
+}
 else
 	var server = http.createServer(handleServerRequest);
 
@@ -136,7 +176,31 @@ function handleServerRequest(request, response) {
 	// determine if the file is valid
 	var isInvalid = (invalids.indexOf(filename) > -1) || (invalids.indexOf(filename.replace(/^\//, "")) > -1) || (/server\.js/.test(filename));
 
-	if (isValidExt && !isInvalid) {
+	var hasAccess = true;
+
+	// if https mode, find out if header contains auth
+	if (useAuth && useHTTPS && request.headers.authorization) {
+		console.log(`Checking credentials:\n    ${request.headers.host}`);
+		// check to make sure user's credentials are correct
+		var authHeader = request.headers.authorization;
+		if (/^Basic [A-Za-z0-9=+\/]+/.test(authHeader)) {
+			// decode Base64 auth header
+			var buf = Buffer.from(authHeader.replace(/^Basic /, ""), 'base64');
+			var username = buf.toString().replace(/:.+$/, "");
+			var pass = buf.toString().replace(/^.+?:/, "");
+			// TODO: handle username and password
+		}
+		else {
+			console.error("Incorrect credentials.");
+			hasAccess = false;
+		}
+	}
+	else if (useAuth && useHTTPS && !request.headers.authorization) {
+		console.log(`Denying request due to lack of auth:\n    ${request.headers.host}`);
+		hasAccess = false;
+	}
+
+	if (hasAccess && isValidExt && !isInvalid) {
 		localPath += filename;
 		fs.exists(localPath, (exists) => {
 			if (exists) {
@@ -163,7 +227,7 @@ function handleServerRequest(request, response) {
 				});
 			}
 		});
-	} else if (isInvalid || !isValidExt) {
+	} else if (hasAccess && isInvalid || !isValidExt) {
 		console.info(`${filename} - Error 403`);
 		var error403 = "<!DOCTYPE html><html><head><title>403 - Access Denied</title></head><body><h1>Error 403</h1><hr/><h2>Access denied.</h2></body></html>";
 		// respond with this default 403 error page UNLESS 403.html is found
@@ -181,6 +245,11 @@ function handleServerRequest(request, response) {
 				response.end(error403);
 			}
 		});
+	} else if (!hasAccess) { // issue 401 if user doesn't have proper credentials
+		console.info(`${filename} - Error 401`);
+		response.setHeader("WWW-Authenticate", `Newauth realm="site", type=1, title="Login to ${hostname}", Basic realm="simple"`);
+		response.statusCode = 401;
+		response.end();
 	}
 }
 
@@ -200,4 +269,4 @@ function getFile(localPath, res, mimeType) {
 	});
 }
 
-console.log(`Static file server running at\n	=> http://${hostname}:${port}/\nCTRL + C to shutdown`);
+console.log(`Static file server running at\n	=> http${useHTTPS?'s':''}://${hostname}:${port}/\nCTRL + C to shutdown`);
