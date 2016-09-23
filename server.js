@@ -1,3 +1,9 @@
+// TODO: salt/hash passwords
+// https://code.ciphertrick.com/2016/01/18/salt-hash-passwords-using-nodejs-crypto/
+
+// TODO: allow stdin input while the server is running
+// see http://stackoverflow.com/a/6064910/2712525
+
 // imports
 var http = require("http"),
 	https = require("https"),
