@@ -4,6 +4,8 @@
 // TODO: allow stdin input while the server is running
 // see http://stackoverflow.com/a/6064910/2712525
 
+// TODO: Add "teapot" setting for a page which returns a 418 "I'm a teapot" status and shows the specified page
+
 // imports
 var http = require("http"),
 	https = require("https"),
