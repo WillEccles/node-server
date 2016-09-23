@@ -1,5 +1,17 @@
 # node-server
-An easy-to-use file server written in Node.js
+An easy-to-use file server written in Node.js.
+
+**Features:**
+
+- Supports HTTP and HTTPS (you must provide your own certificate for HTTPS)
+- Supports user authentication (over HTTPS only)
+- Disallows access to certain files by default, others can be added
+- Custom 403/404 error pages (possibly others as more error handling is added)
+
+**Prerequisites:**
+
+- Please make sure that you have [Node.js](https://nodejs.org) v6.0.0 or greater, as otherwise you may run into errors. (run `node --version` to find out what version you are running)
+- I would recommend reading up on what common HTTP status codes are, what ports to use, how to obtain a certificate (if using HTTPS), etc.
 
 ## Setup
 Setup is simple. There are 2 ways of going about it:
@@ -34,9 +46,9 @@ $ cd /dir/of/server
 $ node server.js [hostname] [port]
 ```
 
-**`hostname`**: Optional hostname. Overrides `settings.json`.
+`hostname`: Optional hostname. Overrides `settings.json`.
 
-**`port`**: Optional port. Overrides `settings.json`.
+`port`: Optional port. Overrides `settings.json`.
 
 ## Settings
 In order to set your preferred settings, you just have to go edit/create `settings.json` with your preferred text editor. The defaults for this file can be seen [here](/settings.json). All of the options can be found below—none of them are required.
@@ -55,6 +67,19 @@ In order to set your preferred settings, you just have to go edit/create `settin
 `"invalidFiles":["string"]`: Files that will always return a 403, even if their extensions are valid. Regardless of what you put in this list, `server.js` will *never* be accessible, for security reasons.
 
 `"errorPages":{"string","string"}`: Locations for error pages. By default, the server will look at `/40*.html`, but this behavior can be changed. This setting supports the variable `$siteDir`, which is replaced by the `siteDirectory` string. For example, if `siteDirectory` is `"mysitedir"` and `"403.html"` is set to `"$siteDir/403.html"`, it will look at `"mysitedir/403.html"`. Keep in mind that `$siteDir` ends without a `/`, so you have to add the `/` before `403.html` (like in the previous example). For info on how to create these files, see [Custom Error Files.](https://github.com/WillEccles/node-server#custom-error-files)
+
+`"useHTTPS":bool`: Whether or not to use HTTPS to connect to the server. If this is set you must also set `"sslOptions"` to contain your certificates.
+
+`"sslOptions":{"string","string"}`: Make sure to set this if you are using SSL (HTTPS). The required values are `"key"` and `"cert"`. These should be set to the links to your certificates (`"cert"`), and your key (`"key"`). If you don't have them, you can use the included scripts `makecert.bat` or `makecert.sh` to generate them. These should be used in testing *only*, and for an actual server, you should purchase a proper signed one.
+
+`"requiresAuth":bool`: Whether or not the user must sign into the site. **This is still a WIP, and as such, should *not* be used in any public server at this time.** I have not implemented hashing and salting for users and passwords. These users and passwords are stored in `users.json` in the same directory as `server.js`. The file is formatted as such:
+
+```json
+{
+	"username1" : "password1",
+	"username2" : "password2"
+}
+```
 
 ## Custom Error Files
 In the event of a 403 or 404 error, the user will be served a simple error page. In the event that you want to make custom ones, you can simply create `/403.html` and `/404.html`. For more info, see `"errorPages"` in the [settings documentation.](https://github.com/WillEccles/node-server#settings)

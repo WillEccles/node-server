@@ -25,6 +25,7 @@
 		"settings.json",
 		"run.bat",
 		"run.sh",
+		"users.json",
 		"foo.bar"
 	],
 	"errorPages" : {
