@@ -7,6 +7,7 @@ An easy-to-use file server written in Node.js.
 - Supports user authentication (over HTTPS only)
 - Disallows access to certain files by default, others can be added
 - Custom 403/404 error pages (possibly others as more error handling is added)
+- Stores user passwords hashed and salted
 
 **Prerequisites:**
 
@@ -70,7 +71,7 @@ In order to set your preferred settings, you just have to go edit/create `settin
 
 `"useHTTPS":bool`: Whether or not to use HTTPS to connect to the server. If this is set you must also set `"sslOptions"` to contain your certificates.
 
-`"sslOptions":{"string","string"}`: Make sure to set this if you are using SSL (HTTPS). The required values are `"key"` and `"cert"`. These should be set to the links to your certificates (`"cert"`), and your key (`"key"`). If you don't have them, you can use the included scripts `makecert.bat` or `makecert.sh` to generate them. These should be used in testing *only*, and for an actual server, you should purchase a proper signed one.
+`"sslOptions":{"string","string"}`: Make sure to set this if you are using SSL (HTTPS). The required values are `"key"` and `"cert"`. These should be set to the links to your certificates (`"cert"`), and your key (`"key"`). If you don't have them, you can use the included scripts `makecert.bat` or `makecert.sh` to generate them. These should be used in testing *only*, and for an actual server, you should purchase a proper signed one. These scripts require `openssl` to be installed.
 
 `"requiresAuth":bool`: Whether or not the user must sign into the site. These users and passwords are stored in `users.json` in the same directory as `server.js`. Passwords are hashed and salted using SHA512, with a 64B salt. The file is formatted as such, and should not be modified (see Commands):
 
