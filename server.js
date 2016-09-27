@@ -191,6 +191,10 @@ stdin.on('data', (chunk) => {
 		console.log("Shutting down server...");
 		process.exit(0);
 	}
+	else {
+		var command = line.split(' ')[0];
+		console.error(`${command} - no such command.`);
+	}
 }).on('end', () => { // when stdin closes via ^D
 	console.log("stdin closed via ^D");
 });
@@ -391,4 +395,4 @@ function getFile(localPath, res, mimeType) {
 	});
 }
 
-console.log(`Static file server running at\n	=> http${useHTTPS?'s':''}://${hostname}:${port}/\nCTRL + C to shutdown`);
+console.log(`Static file server running at\n	=> http${useHTTPS?'s':''}://${hostname}:${port}/\nEnter 'stop' to shutdown.`);

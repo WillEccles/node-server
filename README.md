@@ -72,14 +72,29 @@ In order to set your preferred settings, you just have to go edit/create `settin
 
 `"sslOptions":{"string","string"}`: Make sure to set this if you are using SSL (HTTPS). The required values are `"key"` and `"cert"`. These should be set to the links to your certificates (`"cert"`), and your key (`"key"`). If you don't have them, you can use the included scripts `makecert.bat` or `makecert.sh` to generate them. These should be used in testing *only*, and for an actual server, you should purchase a proper signed one.
 
-`"requiresAuth":bool`: Whether or not the user must sign into the site. **This is still a WIP, and as such, should *not* be used in any public server at this time.** I have not implemented hashing and salting for users and passwords. These users and passwords are stored in `users.json` in the same directory as `server.js`. The file is formatted as such:
+`"requiresAuth":bool`: Whether or not the user must sign into the site. These users and passwords are stored in `users.json` in the same directory as `server.js`. Passwords are hashed and salted using SHA512, with a 64B salt. The file is formatted as such, and should not be modified (see Commands):
 
 ```json
 {
-	"username1" : "password1",
-	"username2" : "password2"
+	"username1" : {
+		"salt" : "passwordsalt",
+		"hash" : "passwordhash"
+	},
+	"username2" : {
+		"salt" : "Passwordsalt2",
+		"hash" : "passhash2"
+	}
 }
 ```
+
+## Commands
+There are some commands which can be used from the command line after the server is running:
+
+| Command | Usage |
+| --- | --- |
+| `stop` | Quits the server. |
+| `adduser [username] [pass]` | Adds a user with username `username` and password `pass`. |
+| `deluser [username]` | Removes user with username `username`. |
 
 ## Custom Error Files
 In the event of a 403 or 404 error, the user will be served a simple error page. In the event that you want to make custom ones, you can simply create `/403.html` and `/404.html`. For more info, see `"errorPages"` in the [settings documentation.](https://github.com/WillEccles/node-server#settings)
