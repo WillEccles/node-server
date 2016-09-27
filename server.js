@@ -1,9 +1,3 @@
-// TODO: salt/hash passwords
-// https://code.ciphertrick.com/2016/01/18/salt-hash-passwords-using-nodejs-crypto/
-
-// TODO: allow stdin input while the server is running
-// see http://stackoverflow.com/a/6064910/2712525
-
 // TODO: Add "teapot" setting for a page which returns a 418 "I'm a teapot" status and shows the specified page
 
 // imports
@@ -11,7 +5,9 @@ var http = require("http"),
 	https = require("https"),
 	url = require("url"),
 	path = require("path"),
-	fs = require("fs");
+	fs = require("fs"),
+	stdin = process.stdin,
+	crypto = require('crypto');
 
 // default extentions, overwritten if settings file contains some
 var validExtensions = { 
@@ -112,9 +108,12 @@ try {
 				fs.accessSync("users.json", fs.F_OK);
 				console.log("Loading users...");
 				var usersFile = JSON.parse(fs.readFileSync("users.json"));
-				for (var key in usersFile) users[key]=usersFile[key];
+				for (var key in usersFile)
+					users[key] = usersFile[key]; 
 			} catch(err) {
 				console.error("Error loading users. Disabling auth.");
+				console.error(err);
+				process.exit(1);
 				useAuth = false;
 			}
 		}
@@ -129,6 +128,7 @@ try {
 		} catch (err) {
 			console.error("Problem reading key file.");
 			useHTTPS = false;
+			console.error(err);
 		}
 		try {
 			fs.accessSync(settings.sslOptions["cert"], fs.F_OK);
@@ -137,6 +137,7 @@ try {
 		} catch(err) {
 			console.error("Problem reading cert file.");
 			useHTTPS = false;
+			console.error(err);
 		}
 		if (!useHTTPS)
 			console.log("Disabling HTTPS...");
@@ -157,6 +158,99 @@ try {
 	}
 } catch (err) {
 	console.error("Problem reading settings file.");
+}
+
+// handle input from stdin while process is running
+stdin.resume();
+stdin.on('data', (chunk) => {
+	// handle commands here
+	var line = chunk.toString().replace(/\n/, '');
+	
+	// command cases:
+	if (/^adduser [^\s\t]+ [^\s\t]+$/i.test(line)) {
+		// add a user to the list of users
+		var parts = line.split(' ');
+		var username = parts[1];
+		var pass = parts[2];
+		if (users[username])
+			console.error(`Error:\n    User '${username}' already exists.`);
+		else
+			addUser(username, pass);
+	}
+	else if (/^(del|rem)user [^\s\t]+$/i.test(line)) {
+		// remove a user
+		var user = line.split(' ')[1];
+		
+		if (users[user.toString()]) {
+			delUser(user.toString());
+		} else {
+			console.error("Error:\n    User '" + user + "' doesn't exist.");
+		}
+	}
+	else if (/^(stop|end|quit)$/i.test(line)) {
+		console.log("Shutting down server...");
+		process.exit(0);
+	}
+}).on('end', () => { // when stdin closes via ^D
+	console.log("stdin closed via ^D");
+});
+
+function delUser(username) {
+	delete users[username.toString()];
+	try {
+		fs.writeFileSync("users.json", JSON.stringify(users));
+		console.log("Successfully deleted user.");
+	} catch(err) {
+		console.error(`Error writing to users.json:\n${err}`);
+		console.error("Deleting user failed.");
+	}
+}
+	
+// add a user
+function addUser(username, pass) {
+	console.log("Adding user...");
+	var hashedPass = saltHashPassword(pass);
+	var userInfo = {"salt": hashedPass.salt, "hash": hashedPass.passwordHash};
+	users[username] = userInfo;
+	// update the users file
+	try {
+		fs.writeFileSync("users.json", JSON.stringify(users));
+		console.log("Added user successfully.");
+	} catch (err) {
+		console.error(`Error writing to users.json:\n${err}`);
+		console.error("Adding user failed.");
+	}
+}
+
+// get a random string
+function genRandomString(length) {
+	return crypto.randomBytes(Math.ceil(length/2)).toString('hex').slice(0,length);
+}
+
+// hash a password
+function sha512(pass, salt) {
+	var hash = crypto.createHmac('sha512', salt);
+	hash.update(pass);
+	var value = hash.digest('hex');
+	return {
+		salt: salt,
+		passwordHash: value
+	};
+}
+
+function saltHashPassword(pass) {
+	var salt = genRandomString(64); // salt should be number of bytes that hash is long, so 512 bit hash = 64 byte salt
+	var passData = sha512(pass, salt);
+	return passData;
+}
+
+function checkPass(username, inpass) {
+	var salt = users[username.toString()]["salt"];
+	var hashedinput = sha512(inpass, salt);
+	if (hashedinput.passwordHash == users[username.toString()]["hash"])
+		return true;
+	else
+		return false;
 }
 
 // create the server
@@ -197,7 +291,19 @@ function handleServerRequest(request, response) {
 			var username = buf.toString().replace(/:.+$/, "");
 			var pass = buf.toString().replace(/^.+?:/, "");
 			
-			if (users[username] == pass) {
+			// now we have to hash the password, assuming the user exists, to see if their password matches
+			var correctPass = false;
+			if (users[username]) {
+				// user exists
+				var hashedInfo = saltHashPassword(username, pass);
+				// find out if the pass is correct
+				var correctPass = checkPass(username, pass);
+			} else {
+				console.error(`Attempt to login ${username} failed:\n  Invalid username.`);
+				correctPass = false;
+			}
+
+			if (correctPass) {
 				console.log(`Granting ${username} access (${request.headers.host}).`);
 				hasAccess = true;
 			}
@@ -262,12 +368,9 @@ function handleServerRequest(request, response) {
 			}
 		});
 	} else if (!hasAccess) { // issue 401 if user doesn't have proper credentials
-		var error401page = "<!DOCTYPE html><html><head><title>401 - Unauthorized</title></head><body><h1>Error 401</h1><hr/><h2>Unauthorized.</h2></body></html>";
 		console.info(`${request.headers.host}:\n    Access denied: ${filename}`);
 		response.setHeader("WWW-Authenticate", `Newauth realm="site", type=1, title="Login to ${hostname}", Basic realm="simple"`);
 		response.statusCode = 401;
-		response.setHeader("Content-Type", ".html");
-		response.setHeader("Content-Length", error401page.length);
 		response.end();
 	}
 }
