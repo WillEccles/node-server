@@ -2,11 +2,11 @@
 	"hostname" : "127.0.0.1",
 	"port" : 8080,
 	"indexFile" : "index.html",
-	"useHTTPS" : true,
-	"requiresAuth": true,
+	"useHTTPS" : false,
+	"requiresAuth": false,
 	"sslOptions" : {
-		"cert" : "cert/key-cert.pem",
-		"key" : "cert/key.pem"
+		"cert" : "key-cert.pem",
+		"key" : "key.pem"
 	},
 	"siteDirectory" : "",
 	"validExts" : {
